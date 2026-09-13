@@ -28,6 +28,16 @@ int32_t pad_count() {
     return n;
 }
 
+int32_t pad_nth(int32_t n) {
+    int32_t seen = 0;
+    for (uint32_t i = 0; i < PAD_MAX_TABS; i++) {
+        if (!pad_docs[i].used) continue;
+        if (seen == n) return (int32_t)i;
+        seen++;
+    }
+    return -1;
+}
+
 bool pad_docs_init() {
     for (uint32_t i = 0; i < PAD_MAX_TABS; i++) {
         pad_docs[i].used = false;

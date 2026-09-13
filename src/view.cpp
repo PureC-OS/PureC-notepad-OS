@@ -174,11 +174,11 @@ static void pad_draw_tabs(NpWin* w, PadGeo* g) {
         b.y = PAD_TOOL_H + 2;
         b.w = g->tab_w > 4 ? g->tab_w - 4 : g->tab_w;
         b.h = PAD_TABS_H - 4;
-        bool act = (int32_t)idx == pad_active;
+        bool act = (int32_t)j == pad_active;
         np_win_rect(w, b, act ? PAD_CUR : PAD_PANEL);
         char nm[40];
-        pad_base_name(pad_docs[idx].path, nm, sizeof(nm));
-        if (pad_docs[idx].dirty) np_append(nm, "*", sizeof(nm));
+        pad_base_name(pad_docs[j].path, nm, sizeof(nm));
+        if (pad_docs[j].dirty) np_append(nm, "*", sizeof(nm));
         char vis[24];
         uint32_t maxc = b.w > 12 ? (b.w - 12) / 8 : 4;
         if (maxc > sizeof(vis) - 1) maxc = sizeof(vis) - 1;

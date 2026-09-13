@@ -24,6 +24,7 @@ extern char pad_prompt_buf[PAD_PROMPT_CAP];
 void pad_set_msg(const char* s, bool err);
 PadDoc* pad_cur();
 int32_t pad_count();
+int32_t pad_nth(int32_t n);
 bool pad_docs_init();
 int32_t pad_new_doc();
 bool pad_close_doc(int32_t idx);
