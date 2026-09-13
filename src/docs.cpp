@@ -175,11 +175,15 @@ bool pad_put(PadDoc* t, char c) {
 bool pad_newline(PadDoc* t) {
     if (!t) return false;
     uint32_t s = pad_lstart(t, t->cursor);
-    uint32_t ind = 0;
-    while (s + ind < t->len && (t->data[s + ind] == ' ' || t->data[s + ind] == '\t')) ind++;
+    char ind[64];
+    uint32_t n = 0;
+    while (s + n < t->len && n < sizeof(ind) && (t->data[s + n] == ' ' || t->data[s + n] == '\t')) {
+        ind[n] = t->data[s + n];
+        n++;
+    }
     if (!pad_put(t, '\n')) return false;
-    for (uint32_t i = 0; i < ind; i++) {
-        if (!pad_put(t, t->data[s + i])) break;
+    for (uint32_t i = 0; i < n; i++) {
+        if (!pad_put(t, ind[i])) break;
     }
     return true;
 }
