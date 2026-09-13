@@ -1,0 +1,30 @@
+#pragma once
+#include <stdint.h>
+#define PAD_MAX_TABS 8
+#define PAD_TAB_CAP 32768
+#define PAD_PATH_CAP 128
+#define PAD_PROMPT_CAP 128
+#define PAD_STATUS_CAP 128
+#define PAD_TOOL_H 30
+#define PAD_TABS_H 22
+#define PAD_STAT_H 26
+#define PAD_BROW_W 200
+#define PAD_GUT_W 56
+#define PAD_ROW_H 16
+#define PAD_COL_W 8
+#define PAD_BROW_MAX 64
+#define PAD_PR_NONE 0
+#define PAD_PR_OPEN 1
+#define PAD_PR_SAVEAS 2
+#define PAD_PR_FIND 3
+#define PAD_BG 0x23232E
+#define PAD_PANEL 0x2A2A38
+#define PAD_PANEL2 0x202029
+#define PAD_LINE 0x3A3A4C
+#define PAD_ACC 0x7FA8F0
+#define PAD_GRN 0x9BD39B
+#define PAD_YLW 0xE8C87E
+#define PAD_RED 0xE08AA0
+#define PAD_GRY 0x8E8EA3
+#define PAD_DGRY 0x62626E
+#define PAD_CUR 0x3E3E52
