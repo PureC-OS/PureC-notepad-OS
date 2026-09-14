@@ -1,0 +1,112 @@
+name: Build, Test and Release Notepad
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y make g++ file
+
+      - name: Run host unit tests (no OS needed)
+        run: make test
+
+      - name: Cache x86_64-elf cross toolchain
+        id: cache-cross
+        uses: actions/cache@v4
+        with:
+          path: ~/cross
+          key: x86_64-elf-gcc-14.1.0-binutils-2.42-v1
+
+      - name: Build x86_64-elf cross toolchain (cache miss only)
+        if: steps.cache-cross.outputs.cache-hit != 'true'
+        run: |
+          sudo apt install -y build-essential bison flex libgmp-dev libmpc-dev libmpfr-dev texinfo wget
+          mkdir -p /tmp/cross-src && cd /tmp/cross-src
+          wget -q https://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.gz
+          tar -xf binutils-2.42.tar.gz
+          mkdir build-binutils && cd build-binutils
+          ../binutils-2.42/configure --target=x86_64-elf --prefix="$HOME/cross" --with-sysroot --disable-nls --disable-werror
+          make -j$(nproc)
+          make install
+          cd /tmp/cross-src
+          wget -q https://ftp.gnu.org/gnu/gcc/gcc-14.1.0/gcc-14.1.0.tar.gz
+          tar -xf gcc-14.1.0.tar.gz
+          mkdir build-gcc && cd build-gcc
+          ../gcc-14.1.0/configure --target=x86_64-elf --prefix="$HOME/cross" --disable-nls --enable-languages=c,c++ --without-headers
+          make all-gcc -j$(nproc)
+          make install-gcc
+          make all-target-libgcc -j$(nproc)
+          make install-target-libgcc
+
+      - name: Build notepad (freestanding ELF)
+        run: |
+          export PATH="$HOME/cross/bin:$PATH"
+          x86_64-elf-g++ --version
+          x86_64-elf-ld --version
+          make
+          ls -lh bin/notepad
+          file bin/notepad
+
+      - name: Upload notepad binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: notepad-elf
+          path: bin/notepad
+          retention-days: 7
+
+  release:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download notepad binary
+        uses: actions/download-artifact@v4
+        with:
+          name: notepad-elf
+          path: ./dist/
+
+      - name: Get commit hash
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create final release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: notepad-v1.0.${{ github.run_number }}
+          name: PureC Notepad v1.0.${{ github.run_number }} (${{ steps.vars.outputs.sha_short }})
+          body: |
+            Final release of PureC Notepad, automatically built after push to main.
+
+            Commit: ${{ github.sha }}
+            Binary: `notepad` (ELF x86-64, freestanding, entry `_start`).
+
+            Copy `notepad` to the PureC OS image programs directory (`bin/program/notepad`) and run:
+            ```
+            notepad
+            notepad /path/to/file.txt
+            ```
+          files: |
+            dist/notepad
+          draft: false
+          prerelease: false
+          make_latest: true
+          generate_release_notes: true
