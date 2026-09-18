@@ -182,10 +182,9 @@ static void pad_draw_tabs(NpWin* w, PadGeo* g) {
         char vis[24];
         uint32_t maxc = b.w > 12 ? (b.w - 12) / 8 : 4;
         if (maxc > sizeof(vis) - 1) maxc = sizeof(vis) - 1;
-        for (uint32_t c = 0; c < maxc && nm[c]; c++) vis[c] = nm[c];
-        vis[maxc] = 0;
-        uint32_t nl = np_strlen(vis);
-        for (uint32_t c = nl; c < maxc; c++) vis[c] = 0;
+        uint32_t copy = 0;
+        while (copy < maxc && nm[copy]) { vis[copy] = nm[copy]; copy++; }
+        vis[copy] = 0;
         np_win_text(w, b.x + 6, PAD_TOOL_H + 7, vis, act ? 0xD5D5E8 : PAD_GRY);
     }
     NpRect pb;

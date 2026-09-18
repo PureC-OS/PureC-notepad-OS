@@ -1,4 +1,5 @@
 #include "sys/np_os.hpp"
+#include "sys/np_font.hpp"
 
 void np_sleep(uint32_t ms) {
     np_sys3(NP_SYS_SLEEP, ms, 0, 0);
@@ -84,15 +85,29 @@ void np_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
 }
 
 void np_text(uint32_t x, uint32_t y, const char* s, uint32_t fg, uint32_t bg) {
-    if (!s || !*s) return;
-    NpTextReq r;
-    r.x = x;
-    r.y = y;
-    r.text = s;
-    r.fg = fg;
-    r.bg = bg;
-    r.size = 8;
-    np_sys3(NP_SYS_DRAW_TEXT, (uint64_t)&r, 0, 0);
+    (void)bg;
+    if (!s) return;
+    for (; *s; ++s) {
+        uint8_t ch = (uint8_t)*s;
+        if (ch >= 128) { x += 8; continue; }
+        if (ch < 32) { x += 8; continue; }
+        const uint8_t* g = NP_FONT[ch];
+        for (uint32_t row = 0; row < 8; row++) {
+            uint8_t bits = g[row];
+            if (!bits) continue;
+            uint32_t run_start = 0;
+            bool in_run = false;
+            for (uint32_t col = 0; col <= 8; col++) {
+                bool set = col < 8 && (bits & (1u << (7 - col)));
+                if (set && !in_run) { run_start = col; in_run = true; }
+                if ((!set || col == 8) && in_run) {
+                    np_rect(x + run_start, y + row, col - run_start, 1, fg);
+                    in_run = false;
+                }
+            }
+        }
+        x += 8;
+    }
 }
 
 bool np_mouse(NpMouse* m) {
